@@ -47,7 +47,7 @@ public class MainActivity extends ActionBarActivity implements
 		super.onResume();
 		m_sensorManager.registerListener(this, m_sensor,
 				SensorManager.SENSOR_DELAY_NORMAL);
-
+		setStop(false);
 		// Use a new tread as this can take a while
 		(new Thread() {
 			public void run() {
