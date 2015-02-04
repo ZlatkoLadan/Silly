@@ -16,6 +16,11 @@ import android.media.AudioTrack;
 import android.os.Bundle;
 import android.os.Handler;
 
+/**
+ * Some code taken from <a href=
+ * 'http://marblemice.blogspot.se/2010/04/generate-and-play-tone-in-android.html'>marblemice.blogspot.se</
+ * a >
+ */
 public class MainActivity extends ActionBarActivity implements
 		SensorEventListener, OnItemSelectedListener {
 	private static final int SAMPLE_RATE = 22050;
@@ -74,22 +79,21 @@ public class MainActivity extends ActionBarActivity implements
 				float y = 0;
 				int idx = 0;
 				short val = 0;
-				// AudioType audioType = AudioType.Sine;
-				AudioType audioType;
 
 				while (!getStop()) {
 					// fill out the array
 
 					y = Round(getY(), 0);
 					y = 440.0f + (y + 10.0f) * 110.0f;
-					audioType = getAudioType();
-
-					if (audioType == AudioType.Sine) {
+					switch (getAudioType()) {
+					case Sine:
 						for (int i = 0; i < SAMPLES; ++i) {
 							sample[i] = Math.sin((2.0f * Math.PI * i * y)
 									/ SAMPLE_RATE);
 						}
-					} else if (audioType == AudioType.Square) {
+						break;
+
+					case Square:
 						for (int i = 0; i < SAMPLES; ++i) {
 							sample[i] = Math.sin((2.0f * Math.PI * i * y)
 									/ SAMPLE_RATE);
@@ -102,11 +106,14 @@ public class MainActivity extends ActionBarActivity implements
 								sample[i] = Byte.MIN_VALUE;
 							}
 						}
-					} else {
+						break;
+
+					default:
 						for (int i = 0; i < SAMPLES; ++i) {
 							sample[i] = 2 * (i % (SAMPLE_RATE / y))
 									/ (SAMPLE_RATE / y) - 1;
 						}
+						break;
 					}
 
 					// convert to 16 bit pcm sound array
