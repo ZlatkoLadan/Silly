@@ -4,4 +4,10 @@
     <string name="app_name">Silly</string>
     <string name="app_text">Rotate your phone or something (Y axis)?</string>
 
+    <string-array name="audio_type">
+        <item>Sine</item>
+        <item>Square</item>
+        <item>Saw tooth</item>
+    </string-array>
+
 </resources>

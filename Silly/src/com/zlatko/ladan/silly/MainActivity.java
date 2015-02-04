@@ -1,6 +1,10 @@
 package com.zlatko.ladan.silly;
 
 import android.support.v7.app.ActionBarActivity;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemSelectedListener;
+import android.widget.Spinner;
 import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -13,7 +17,7 @@ import android.os.Bundle;
 import android.os.Handler;
 
 public class MainActivity extends ActionBarActivity implements
-		SensorEventListener {
+		SensorEventListener, OnItemSelectedListener {
 	private static final int SAMPLE_RATE = 22050;
 	private static final int DURATION = 100; // milliseconds
 	private static final int SAMPLES = DURATION * SAMPLE_RATE / 1000;
@@ -24,11 +28,14 @@ public class MainActivity extends ActionBarActivity implements
 	private float m_y;
 	private final Object m_lock = new Object();
 	private boolean m_stop = false;
+	private AudioType m_audioType = AudioType.Sine;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
+		Spinner spinner = (Spinner) findViewById(R.id.spinnerAudioType);
+		spinner.setOnItemSelectedListener(this);
 		m_sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
 		if (m_sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) != null) {
 			m_sensor = m_sensorManager
@@ -40,6 +47,10 @@ public class MainActivity extends ActionBarActivity implements
 		float p = (float) Math.pow(10, a_decimal);
 		a_value = a_value * p;
 		return (float) (Math.round(a_value) / p);
+	}
+
+	private enum AudioType {
+		Sine, Square, SawTooth
 	}
 
 	@Override
@@ -63,15 +74,39 @@ public class MainActivity extends ActionBarActivity implements
 				float y = 0;
 				int idx = 0;
 				short val = 0;
+				// AudioType audioType = AudioType.Sine;
+				AudioType audioType;
 
 				while (!getStop()) {
 					// fill out the array
 
 					y = Round(getY(), 0);
 					y = 440.0f + (y + 10.0f) * 110.0f;
-					for (int i = 0; i < SAMPLES; ++i) {
-						sample[i] = Math.sin((2.0f * Math.PI * i * y)
-								/ SAMPLE_RATE);
+					audioType = getAudioType();
+
+					if (audioType == AudioType.Sine) {
+						for (int i = 0; i < SAMPLES; ++i) {
+							sample[i] = Math.sin((2.0f * Math.PI * i * y)
+									/ SAMPLE_RATE);
+						}
+					} else if (audioType == AudioType.Square) {
+						for (int i = 0; i < SAMPLES; ++i) {
+							sample[i] = Math.sin((2.0f * Math.PI * i * y)
+									/ SAMPLE_RATE);
+							if (sample[i] > 0.0) {
+								sample[i] = Byte.MAX_VALUE;
+								continue;
+							}
+
+							if (sample[i] < 0.0) {
+								sample[i] = Byte.MIN_VALUE;
+							}
+						}
+					} else {
+						for (int i = 0; i < SAMPLES; ++i) {
+							sample[i] = 2 * (i % (SAMPLE_RATE / y))
+									/ (SAMPLE_RATE / y) - 1;
+						}
 					}
 
 					// convert to 16 bit pcm sound array
@@ -102,6 +137,14 @@ public class MainActivity extends ActionBarActivity implements
 		m_stop = a_value;
 	}
 
+	private synchronized AudioType getAudioType() {
+		return m_audioType;
+	}
+
+	private synchronized void setAudioType(AudioType a_value) {
+		m_audioType = a_value;
+	}
+
 	@Override
 	protected void onPause() {
 		super.onPause();
@@ -125,5 +168,28 @@ public class MainActivity extends ActionBarActivity implements
 	@Override
 	public void onAccuracyChanged(Sensor a_sensor, int a_accuracy) {
 
+	}
+
+	@Override
+	public void onItemSelected(AdapterView<?> a_parent, View a_view,
+			int a_position, long id) {
+		switch (a_position) {
+		case 0:
+			this.setAudioType(AudioType.Sine);
+			break;
+
+		case 1:
+			this.setAudioType(AudioType.Square);
+			break;
+
+		default:
+			this.setAudioType(AudioType.SawTooth);
+			break;
+		}
+	}
+
+	@Override
+	public void onNothingSelected(AdapterView<?> a_parent) {
+		this.setAudioType(AudioType.Sine);
 	}
 }
