@@ -49,7 +49,7 @@ public class MainActivity extends ActionBarActivity implements
 				SensorManager.SENSOR_DELAY_NORMAL);
 
 		// Use a new tread as this can take a while
-		(new Thread(new Runnable() {
+		(new Thread() {
 			public void run() {
 				final double sample[] = new double[SAMPLES];
 				final byte generatedSound[] = new byte[2 * SAMPLES];
@@ -66,12 +66,12 @@ public class MainActivity extends ActionBarActivity implements
 
 				while (!getStop()) {
 					// fill out the array
-					y = Round(getY(), 1);
 
-					y = 440.0f + (y + 10.0f) / 20.0f * 440.0f;
+					y = Round(getY(), 0);
+					y = 440.0f + (y + 10.0f) * 110.0f;
 					for (int i = 0; i < SAMPLES; ++i) {
-						sample[i] = Math.sin(2 * Math.PI * i
-								/ (SAMPLE_RATE / (int) y));
+						sample[i] = Math.sin((2.0f * Math.PI * i * y)
+								/ SAMPLE_RATE);
 					}
 
 					// convert to 16 bit pcm sound array
@@ -91,7 +91,7 @@ public class MainActivity extends ActionBarActivity implements
 				audioTrack.stop();
 				audioTrack.release();
 			}
-		})).start();
+		}).start();
 	}
 
 	private synchronized boolean getStop() {
